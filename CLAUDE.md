@@ -29,14 +29,22 @@ pytest tests/test_scheduler.py
 
 ## Architecture
 
-The intended design (from `reflection.md`) has four classes:
+All logic lives in `pawpal_system.py`. Four dataclasses, defined in this order (each depends on the one above it):
 
-- **`Task`** — `name`, `duration` (minutes), `priority` (low/medium/high), `is_complete`; method `markDone()` flips completion
-- **`Pet`** — `name`, `species` (dog/cat/other)
-- **`Owner`** — `name`, `pets` (list of `Pet`), `tasks` (list of `Task`); methods `addPet()` and `addTask()`
-- **`Scheduler`** — `tasks` (list), `daily_plan` (list); methods `buildPlan()` constructs the schedule, `displayPlan()` formats it for the UI
+- **`Task`** — `name`, `duration` (minutes), `priority` ("low"/"medium"/"high"), `is_complete`; `markDone()` sets completion
+- **`Pet`** — `name`, `species`, `tasks: list[Task]`; `addTask()` appends to its own task list
+- **`Owner`** — `name`, `pets: list[Pet]`; `addPet()` adds a pet, `getAllTasks()` flattens all pets' tasks into one list
+- **`Scheduler`** — requires `tasks: list[Task]` and `available_minutes: int`; `buildPlan()` sorts by `PRIORITY_ORDER` and greedily fills the time budget, `displayPlan()` renders the plan starting at 08:00
 
-These classes do not exist yet — they need to be implemented (likely in a new module such as `pawpal_system.py`, since a compiled `.pyc` for that name exists in `__pycache__`).
+**Key design decision:** tasks belong to `Pet`, not `Owner`. The owner aggregates via `getAllTasks()` and passes the result to `Scheduler`. The typical call sequence is:
+
+```python
+scheduler = Scheduler(tasks=owner.getAllTasks(), available_minutes=120)
+scheduler.buildPlan()
+print(scheduler.displayPlan())
+```
+
+`PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}` is a module-level constant used by `buildPlan()` for sorting.
 
 ## Key Files
 

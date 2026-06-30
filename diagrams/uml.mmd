@@ -1,17 +1,4 @@
 classDiagram
-    class Owner {
-        +str name
-        +list pets
-        +list tasks
-        +addPet(pet: Pet) None
-        +addTask(task: Task) None
-    }
-
-    class Pet {
-        +str name
-        +str species
-    }
-
     class Task {
         +str name
         +int duration
@@ -20,13 +7,28 @@ classDiagram
         +markDone() None
     }
 
+    class Pet {
+        +str name
+        +str species
+        +list tasks
+        +addTask(task: Task) None
+    }
+
+    class Owner {
+        +str name
+        +list pets
+        +addPet(pet: Pet) None
+        +getAllTasks() list
+    }
+
     class Scheduler {
         +list tasks
+        +int available_minutes
         +list daily_plan
         +buildPlan() list
         +displayPlan() str
     }
 
-    Owner "1" --> "1..*" Pet : owns
-    Owner "1" --> "0..*" Task : manages
+    Pet "1" --> "0..*" Task : stores
+    Owner "1" --> "1..*" Pet : manages
     Scheduler "1" --> "0..*" Task : schedules

@@ -9,17 +9,17 @@
 
 The user should be able to add basic information including their name and their pets name. They should be able to schedule tasks including the priority and dudration. The user should also be able to clearly see a daily plan of what tasks will be done that day.The goals said that there will be a Owner, Pet, Scheduler, and Task class
 
-### OWNER CLASS
- The Owner class has the owner's name, a list of Pet objects (so an owner can have more than one pet), and a list of Tasks. Methods: `addPet(pet)` to add a pet, `addTask(task)` to add a task. Python attributes are accessed directly, so separate getter methods like `getName()` are not needed.
-
-### PET CLASS
- The Pet class has the pet's name and species (dog, cat, other). Size and happiness were cut because the UI does not collect them and they are not needed for scheduling.
-
-### TASKS CLASS
+### TASK CLASS
  The Task class holds the name of the task, the duration in minutes, the priority (low/medium/high), and a boolean `is_complete`. Method: `markDone()` sets `is_complete` to True. Price and individual setter methods were cut — price is not in the UI, and in Python attributes can be reassigned directly without setters.
 
+### PET CLASS
+ The Pet class has the pet's name, species (dog, cat, other), and a list of Tasks. Each pet manages its own care tasks via `addTask()`. Size and happiness were cut because the UI does not collect them and they are not needed for scheduling.
+
+### OWNER CLASS
+ The Owner class has the owner's name and a list of Pet objects. Methods: `addPet(pet)` to add a pet, `getAllTasks()` to aggregate all tasks across every pet into one flat list for the Scheduler. The owner no longer holds tasks directly — tasks belong to pets.
+
 ### SCHEDULER CLASS
- The Scheduler has the list of tasks to consider and a `daily_plan` list that stores the built schedule. Methods: `buildPlan()` constructs and returns the ordered schedule, `displayPlan()` formats it as a string for the UI.
+ The Scheduler receives a flat list of tasks (from `owner.getAllTasks()`) and an `available_minutes` budget. `buildPlan()` sorts tasks by priority using a lookup map (`PRIORITY_ORDER`) and greedily fills the time budget. `displayPlan()` renders the plan as a timed schedule starting at 08:00.
 
 **b. Design changes**
 
@@ -31,6 +31,10 @@ Yes. After reviewing the Streamlit UI in `app.py`, several attributes and method
 - `Pet` lost `size`, `happiness`, and `makeNoise()` — none of these are collected in the UI or used by the scheduler.
 - `Task` lost `price` (not in the UI) and all setter methods (direct attribute assignment is the Python convention).
 The core four classes and their primary responsibilities stayed the same.
+
+When checking pawpal_system.py again I noticed that there was no system to guard against pressing displayPlan when buildPlan wasn't used yet.
+
+A second design change moved tasks from `Owner` to `Pet`. Each pet now stores its own task list and an `addTask()` method. `Owner` dropped its `tasks` attribute and `addTask()` in favour of `getAllTasks()`, which flattens all pets' tasks into one list for the Scheduler. This better reflects real life — a walk belongs to the dog, not to the owner — and lets the Scheduler work across multiple pets cleanly.
 
 ---
 
