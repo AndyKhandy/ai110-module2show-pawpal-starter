@@ -7,6 +7,20 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+The user should be able to add basic information including their name and their pets name. They should be able to schedule tasks including the priority and dudration. The user should also be able to clearly see a daily plan of what tasks will be done that day.The goals said that there will be a Owner, Pet, Scheduler, and Task class
+
+### OWNER CLASS
+ The Owner class will most likely have the owner's name, a list containing all the Tasks, and a Pet object that will hold the owner's Pet. For the methods it will likely have a getName, getPetName, getTasks, something like that and methods to add tasks, change the Pet object (if the owner gets a new one), and more
+
+### PET CLASS
+ The Pet class will likely include the name of the pet, the size of the pet, the type of the pet (dog, cat,etc), and possible an attribute that holds it's Owner object. It might also have a happy attribute or love attribute. The Pet could have a function to perform an animal noise like sneeze or poof 
+ 
+ ### TASKS CLASS
+ The Tasks class will hold the name of the task, the duration of the task, the priority of the task, the price of the task, if the task is complete, and more. The class should have methods to edit the fields and a method to set done to True
+
+ ### SCHEDULER CLASS
+ This class will likely contain a list of the Tasks of the owner (already an attribute of the owner), a display of the daily plan, and any other actions needed to build out a daily plan that the owner can view
+
 **b. Design changes**
 
 - Did your design change during implementation?
