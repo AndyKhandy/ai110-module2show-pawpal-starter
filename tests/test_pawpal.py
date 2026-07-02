@@ -1,8 +1,13 @@
+from datetime import date, timedelta
+
 from pawpal_system import Task, Pet, Scheduler
 
 
-def make_task(name="Feed", duration=15, priority="medium", pet_name="Rex", time="08:00"):
-    return Task(name=name, duration=duration, priority=priority, petName=pet_name, time=time)
+def make_task(name="Feed", duration=15, priority="medium", pet_name="Rex", time="08:00", due_date=None):
+    kwargs = {"name": name, "duration": duration, "priority": priority, "petName": pet_name, "time": time}
+    if due_date is not None:
+        kwargs["due_date"] = due_date
+    return Task(**kwargs)
 
 
 def test_mark_done_sets_is_complete_true():
@@ -121,3 +126,51 @@ def test_filter_tasks_with_no_criteria_returns_all_tasks():
     result = scheduler.filter_tasks()
 
     assert result == [task_a, task_b]
+
+
+def test_detect_conflicts_returns_empty_list_when_no_overlap():
+    early = make_task(name="Feed", time="08:00", duration=15, pet_name="Rex")
+    late = make_task(name="Walk", time="09:00", duration=30, pet_name="Rex")
+    scheduler = Scheduler(tasks=[early, late], available_minutes=120)
+
+    assert scheduler.detect_conflicts() == []
+
+
+def test_detect_conflicts_flags_overlap_for_same_pet():
+    walk = make_task(name="Walk", time="14:30", duration=50, pet_name="Rex")
+    nail_trim = make_task(name="Nail Trim", time="14:40", duration=15, pet_name="Rex")
+    scheduler = Scheduler(tasks=[walk, nail_trim], available_minutes=120)
+
+    conflicts = scheduler.detect_conflicts()
+
+    assert len(conflicts) == 1
+    assert "Walk" in conflicts[0] and "Nail Trim" in conflicts[0]
+
+
+def test_detect_conflicts_flags_overlap_across_different_pets():
+    walk = make_task(name="Walk", time="14:30", duration=50, pet_name="Rex")
+    ear_cleaning = make_task(name="Ear Cleaning", time="14:35", duration=20, pet_name="Fido")
+    scheduler = Scheduler(tasks=[walk, ear_cleaning], available_minutes=120)
+
+    conflicts = scheduler.detect_conflicts()
+
+    assert len(conflicts) == 1
+    assert "Rex" in conflicts[0] and "Fido" in conflicts[0]
+
+
+def test_detect_conflicts_treats_back_to_back_tasks_as_non_overlapping():
+    feed = make_task(name="Feed", time="08:00", duration=15, pet_name="Rex")
+    walk = make_task(name="Walk", time="08:15", duration=15, pet_name="Rex")
+    scheduler = Scheduler(tasks=[feed, walk], available_minutes=120)
+
+    assert scheduler.detect_conflicts() == []
+
+
+def test_detect_conflicts_ignores_same_time_tasks_on_different_days():
+    today_task = make_task(name="Feed", time="08:00", duration=30, pet_name="Rex", due_date=date(2026, 7, 1))
+    tomorrow_task = make_task(
+        name="Feed", time="08:00", duration=30, pet_name="Rex", due_date=date(2026, 7, 1) + timedelta(days=1)
+    )
+    scheduler = Scheduler(tasks=[today_task, tomorrow_task], available_minutes=120)
+
+    assert scheduler.detect_conflicts() == []

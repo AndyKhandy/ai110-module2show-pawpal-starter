@@ -103,6 +103,23 @@ class Scheduler:
             results = [t for t in results if t.is_complete == is_complete]
         return results
 
+    def detect_conflicts(self) -> list[str]:
+        """Find same-day, overlapping-time tasks (same pet or different pets) and return warning messages."""
+        warnings = []
+        sorted_tasks = sorted(self.tasks, key=lambda t: (t.due_date, _time_str_to_minutes(t.time)))
+        for i, a in enumerate(sorted_tasks):
+            a_end = _time_str_to_minutes(a.time) + a.duration
+            for b in sorted_tasks[i + 1:]:
+                if b.due_date != a.due_date:
+                    break
+                if _time_str_to_minutes(b.time) >= a_end:
+                    break
+                warnings.append(
+                    f"Conflict: '{a.name}' ({a.petName}, {a.time}-{_minutes_to_time_str(a_end)}) "
+                    f"overlaps with '{b.name}' ({b.petName}, {b.time})"
+                )
+        return warnings
+
     def displayPlan(self) -> str:
         """Render the built plan as a human-readable schedule using each task's own start time."""
         if not self.daily_plan:

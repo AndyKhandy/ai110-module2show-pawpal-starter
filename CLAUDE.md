@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**PawPal+** is a Streamlit pet care planning app built as an AI110 Module 2 project. The starter scaffold is intentionally thin — `app.py` has a working UI shell but no scheduling logic. The student's job is to design classes, implement a scheduler, connect it to the UI, and write tests.
+**PawPal+** is a Streamlit pet care planning app built as an AI110 Module 2 project. The backend (`pawpal_system.py`), the Streamlit UI (`app.py`), and the test suite (`tests/test_pawpal.py`) are all implemented — task scheduling, sorting, filtering, recurring tasks, and conflict detection are done. `main.py` is a small CLI demo script that exercises the backend directly (useful for quick manual checks without launching Streamlit).
 
 ## Commands
 
@@ -24,17 +24,25 @@ pytest
 pytest --cov
 
 # Run a single test file
-pytest tests/test_scheduler.py
+pytest tests/test_pawpal.py
+
+# Run the CLI demo script
+python main.py
 ```
 
 ## Architecture
 
 All logic lives in `pawpal_system.py`. Four dataclasses, defined in this order (each depends on the one above it):
 
-- **`Task`** — `name`, `duration` (minutes), `priority` ("low"/"medium"/"high"), `is_complete`; `markDone()` sets completion
+- **`Task`** — `name`, `duration` (minutes), `priority` ("low"/"medium"/"high"), `petName`, `time` ("HH:MM" start), `is_complete`, `recurrence` ("none"/"daily"/"weekly"), `due_date` (defaults to today). `markDone()` sets `is_complete = True`; if `recurrence` is `"daily"` or `"weekly"`, it also returns a new `Task` for the next occurrence with `due_date` advanced via `timedelta` (module-level `RECURRENCE_DELTA` maps recurrence → `timedelta`). Returns `None` for non-recurring tasks.
 - **`Pet`** — `name`, `species`, `tasks: list[Task]`; `addTask()` appends to its own task list
 - **`Owner`** — `name`, `pets: list[Pet]`; `addPet()` adds a pet, `getAllTasks()` flattens all pets' tasks into one list
-- **`Scheduler`** — requires `tasks: list[Task]` and `available_minutes: int`; `buildPlan()` sorts by `PRIORITY_ORDER` and greedily fills the time budget, `displayPlan()` renders the plan starting at 08:00
+- **`Scheduler`** — requires `tasks: list[Task]` and `available_minutes: int`:
+  - `buildPlan()` sorts by `PRIORITY_ORDER` and greedily fills the time budget
+  - `sort_by_time()` sorts `self.tasks` in place by `"HH:MM"` start time
+  - `filter_tasks(pet_name=None, is_complete=None)` returns tasks matching either/both optional filters
+  - `detect_conflicts()` sorts tasks by `(due_date, time)` and returns a list of warning strings for any two tasks (same pet or different pets) whose time windows overlap on the same day
+  - `displayPlan()` renders the built plan, grouped by pet, using each task's own start time
 
 **Key design decision:** tasks belong to `Pet`, not `Owner`. The owner aggregates via `getAllTasks()` and passes the result to `Scheduler`. The typical call sequence is:
 
@@ -46,11 +54,14 @@ print(scheduler.displayPlan())
 
 `PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}` is a module-level constant used by `buildPlan()` for sorting.
 
+**Completed features:** sorting by time, filtering by pet/status, recurring tasks (daily/weekly), and conflict detection are all implemented — see `sort_by_time()`, `filter_tasks()`, `Task.markDone()`, and `detect_conflicts()` above.
+
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `app.py` | Streamlit UI shell — connect scheduler output here |
+| `app.py` | Streamlit UI — pet/task entry, recurrence selection, mark-complete flow, schedule generation |
+| `main.py` | CLI demo script exercising the backend directly (sorting, filtering, conflicts) |
 | `diagrams/uml.mmd` | Mermaid class diagram — keep updated to match implementation |
 | `reflection.md` | Design journal — student fills this in during development |
 | `ai_interactions.md` | Log for stretch features involving AI agent/prompt experiments |
@@ -58,7 +69,7 @@ print(scheduler.displayPlan())
 
 ## Integration Pattern
 
-Once the backend classes exist, wire them into `app.py` at the "Generate schedule" button (line 76). The UI already collects `owner_name`, `pet_name`, `species`, and a `tasks` list in `st.session_state`.
+Backend classes are wired into `app.py`'s "Add pet", "Add task", "Mark complete", and "Generate schedule" buttons. Note: `st.selectbox()` does not reliably return the same live object reference across reruns for options that are custom dataclass instances (e.g. `Task`) — select by index into a freshly computed list instead, then dereference the real object at click time (see the "Mark a task complete" flow in `app.py` for the pattern).
 
 ## UML
 
@@ -78,6 +89,3 @@ Examples:
 - `feat(scheduler): implement priority-based buildPlan logic`
 - `docs(uml): update class diagram to reflect final implementation`
 - `fix(task): correct markDone to set is_complete to True`
-
-### FUTURE TASKS TO COMPLETE
- You will implement logic for sorting tasks by time, filtering by pet/status, handling recurring tasks, and basic conflict detection .

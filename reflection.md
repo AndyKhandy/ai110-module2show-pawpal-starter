@@ -45,10 +45,18 @@ A second design change moved tasks from `Owner` to `Pet`. Each pet now stores it
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+The constraints my scheduler considered is mainly time; it doesn't include priority or preferences
+
+I decided that this constraint mattered most since a scheduler is built upon tasks or events that must follow a certain time range and not conflict with each other
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+One tradeoff my scheduler makes is that I wanted to add priority filtering but that would add complexity for grouping tasks to a specific pet than the original algorithim. This tradeoff is reasonable for this scenario because it makes the grouping of tasks by pet more visible instead of all high priority tasks being at the start for example.
+
+This brings about a big issue of where you might have two high priority tasks next to each other (one for a different pet). It probably isn't plausible to care for one pet and then care for another pet right after (unless it's an event that goes together like both pets taking a shower)
 
 ---
 
