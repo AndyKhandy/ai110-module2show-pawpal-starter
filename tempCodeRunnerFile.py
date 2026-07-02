@@ -1,0 +1,1 @@
+key=lambda t: PRIORITY_ORDER[t.priority],

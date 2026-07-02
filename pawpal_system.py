@@ -7,7 +7,8 @@ PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}
 class Task:
     name: str
     duration: int       # minutes
-    priority: str       # "low", "medium", "high"
+    priority: str    # "low", "medium", "high"
+    petName: str     
     is_complete: bool = False
 
     def markDone(self) -> None:
@@ -46,14 +47,9 @@ class Scheduler:
     daily_plan: list[Task] = field(default_factory=list)
 
     def buildPlan(self) -> list[Task]:
-        sorted_tasks = sorted(
-            self.tasks,
-            key=lambda t: PRIORITY_ORDER[t.priority],
-            reverse=True,
-        )
         time_used = 0
         self.daily_plan = []
-        for task in sorted_tasks:
+        for task in self.tasks:
             if time_used + task.duration <= self.available_minutes:
                 self.daily_plan.append(task)
                 time_used += task.duration
@@ -64,10 +60,15 @@ class Scheduler:
             return "No plan built yet. Call buildPlan() first."
         lines = []
         current_minute = 8 * 60             # schedule starts at 08:00
+        currPet = ""
         for task in self.daily_plan:
+            if currPet == "" or currPet != task.petName:
+                currPet = task.petName
+                lines.append(f"Tasks for {currPet}")
+            
             h, m = divmod(current_minute, 60)
             lines.append(
-                f"{h:02d}:{m:02d} — {task.name} ({task.duration} min) [priority: {task.priority}]"
+                f"  {h:02d}:{m:02d} — {task.name} ({task.duration} min) [priority: {task.priority}]"
             )
             current_minute += task.duration
         return "\n".join(lines)
