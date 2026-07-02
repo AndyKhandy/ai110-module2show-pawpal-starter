@@ -3,12 +3,25 @@ from dataclasses import dataclass, field
 PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}
 
 
+def _time_str_to_minutes(time_str: str) -> int:
+    """Parse an "HH:MM" (or "H:MM") string into minutes since midnight."""
+    h, m = (int(p) for p in time_str.split(":"))
+    return h * 60 + m
+
+
+def _minutes_to_time_str(minutes: int) -> str:
+    """Format minutes since midnight back into a zero-padded "HH:MM" string."""
+    h, m = divmod(minutes, 60)
+    return f"{h:02d}:{m:02d}"
+
+
 @dataclass
 class Task:
     name: str
     duration: int       # minutes
     priority: str    # "low", "medium", "high"
-    petName: str     
+    petName: str
+    time: str            # "HH:MM" scheduled start time
     is_complete: bool = False
 
     def markDone(self) -> None:
@@ -60,21 +73,33 @@ class Scheduler:
                 time_used += task.duration
         return self.daily_plan
 
+    def sort_by_time(self) -> list[Task]:
+        """Sort tasks chronologically by their HH:MM start time."""
+        self.tasks = sorted(self.tasks, key=lambda t: _time_str_to_minutes(t.time))
+        return self.tasks
+
+    def filter_tasks(self, pet_name: str = None, is_complete: bool = None) -> list[Task]:
+        """Return tasks matching the given pet name and/or completion status."""
+        results = self.tasks
+        if pet_name is not None:
+            results = [t for t in results if t.petName == pet_name]
+        if is_complete is not None:
+            results = [t for t in results if t.is_complete == is_complete]
+        return results
+
     def displayPlan(self) -> str:
-        """Render the built plan as a human-readable schedule starting at 08:00."""
+        """Render the built plan as a human-readable schedule using each task's own start time."""
         if not self.daily_plan:
             return "No plan built yet. Call buildPlan() first."
         lines = []
-        current_minute = 8 * 60             # schedule starts at 08:00
         currPet = ""
         for task in self.daily_plan:
             if currPet == "" or currPet != task.petName:
                 currPet = task.petName
                 lines.append(f"Tasks for {currPet}")
-            
-            h, m = divmod(current_minute, 60)
+
+            end_time = _minutes_to_time_str(_time_str_to_minutes(task.time) + task.duration)
             lines.append(
-                f"  {h:02d}:{m:02d} — {task.name} ({task.duration} min) [priority: {task.priority}]"
+                f"  {task.time} to {end_time} — {task.name} [priority: {task.priority}]"
             )
-            current_minute += task.duration
         return "\n".join(lines)

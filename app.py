@@ -68,17 +68,19 @@ st.caption("Add a few tasks. In your final version, these should feed into your 
 
 if owner.pets:
     task_pet_name = st.selectbox("Pet", [p.name for p in owner.pets])
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         task_title = st.text_input("Task title", value="Morning walk")
     with col2:
         duration = st.number_input("Duration (minutes)", min_value=1, max_value=240, value=20)
     with col3:
         priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
+    with col4:
+        task_time = st.text_input("Start time (HH:MM)", value="08:00")
 
     if st.button("Add task"):
         pet = next(p for p in owner.pets if p.name == task_pet_name)
-        pet.addTask(Task(name=task_title, duration=int(duration), priority=priority, petName=task_pet_name))
+        pet.addTask(Task(name=task_title, duration=int(duration), priority=priority, petName=task_pet_name, time=task_time))
 else:
     st.info("Add a pet before adding tasks.")
 
@@ -87,7 +89,7 @@ if all_tasks:
     st.write("Current tasks:")
     st.table(
         [
-            {"pet": t.petName, "title": t.name, "duration_minutes": t.duration, "priority": t.priority}
+            {"pet": t.petName, "title": t.name, "time": t.time, "duration_minutes": t.duration, "priority": t.priority}
             for t in all_tasks
         ]
     )

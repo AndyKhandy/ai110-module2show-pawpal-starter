@@ -3,6 +3,8 @@ classDiagram
         +str name
         +int duration
         +str priority
+        +str petName
+        +str time
         +bool is_complete
         +markDone() None
     }
@@ -26,6 +28,8 @@ classDiagram
         +int available_minutes
         +list daily_plan
         +buildPlan() list
+        +sort_by_time() list
+        +filter_tasks(pet_name: str, is_complete: bool) list
         +displayPlan() str
     }
 

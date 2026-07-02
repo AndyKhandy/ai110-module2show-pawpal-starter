@@ -78,3 +78,6 @@ Examples:
 - `feat(scheduler): implement priority-based buildPlan logic`
 - `docs(uml): update class diagram to reflect final implementation`
 - `fix(task): correct markDone to set is_complete to True`
+
+### FUTURE TASKS TO COMPLETE
+ You will implement logic for sorting tasks by time, filtering by pet/status, handling recurring tasks, and basic conflict detection .

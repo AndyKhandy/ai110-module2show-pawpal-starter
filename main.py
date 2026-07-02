@@ -6,15 +6,36 @@ pet2 = Pet("Bob", "Cat")
 andy.addPet(pet1)
 andy.addPet(pet2)
 
-pet1Task1 = Task("Walk", 50, "high", pet1.name)
-pet1Task2 = Task("Bath", 25, "low", pet1.name)
-pet2Task1 = Task("Cut Hair", 40, "medium", pet2.name)
+# Tasks are added out of chronological order on purpose to exercise sort_by_time().
+pet1Task1 = Task("Walk", 50, "high", pet1.name, "14:30")
+pet1Task2 = Task("Bath", 25, "low", pet1.name, "08:00")
+pet1Task3 = Task("Feed", 10, "medium", pet1.name, "12:00")
+pet2Task1 = Task("Cut Hair", 40, "medium", pet2.name, "09:15")
+pet2Task2 = Task("Vet Checkup", 30, "high", pet2.name, "16:00")
+
+pet1Task2.markDone()
+pet2Task1.markDone()
 
 pet1.addTask(pet1Task1)
 pet1.addTask(pet1Task2)
+pet1.addTask(pet1Task3)
 pet2.addTask(pet2Task1)
+pet2.addTask(pet2Task2)
 
 planner = Scheduler(andy.getAllTasks(), 900)
 planner.buildPlan()
 print("-----Today's Schedule-----")
 print(planner.displayPlan())
+
+print("\n-----Tasks Sorted by Time-----")
+for task in planner.sort_by_time():
+    print(f"  {task.time} - {task.name} ({task.petName})")
+
+print("\n-----Incomplete Tasks-----")
+for task in planner.filter_tasks(is_complete=False):
+    print(f"  {task.name} ({task.petName}) - {task.time}")
+
+print("\n-----Cassie's Tasks-----")
+for task in planner.filter_tasks(pet_name="Cassie"):
+    status = "done" if task.is_complete else "pending"
+    print(f"  {task.name} - {task.time} [{status}]")
