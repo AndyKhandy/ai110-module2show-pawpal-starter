@@ -68,7 +68,7 @@ st.caption("Add a few tasks. In your final version, these should feed into your 
 
 if owner.pets:
     task_pet_name = st.selectbox("Pet", [p.name for p in owner.pets])
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         task_title = st.text_input("Task title", value="Morning walk")
     with col2:
@@ -77,22 +77,67 @@ if owner.pets:
         priority = st.selectbox("Priority", ["low", "medium", "high"], index=2)
     with col4:
         task_time = st.text_input("Start time (HH:MM)", value="08:00")
+    with col5:
+        recurrence = st.selectbox("Recurrence", ["none", "daily", "weekly"])
 
     if st.button("Add task"):
         pet = next(p for p in owner.pets if p.name == task_pet_name)
-        pet.addTask(Task(name=task_title, duration=int(duration), priority=priority, petName=task_pet_name, time=task_time))
+        pet.addTask(
+            Task(
+                name=task_title,
+                duration=int(duration),
+                priority=priority,
+                petName=task_pet_name,
+                time=task_time,
+                recurrence=recurrence,
+            )
+        )
 else:
     st.info("Add a pet before adding tasks.")
 
+def _task_row(t):
+    return {
+        "pet": t.petName,
+        "title": t.name,
+        "time": t.time,
+        "duration_minutes": t.duration,
+        "priority": t.priority,
+        "recurrence": t.recurrence,
+        "due_date": t.due_date,
+    }
+
+
 all_tasks = owner.getAllTasks()
+incomplete_tasks = [t for t in all_tasks if not t.is_complete]
+completed_tasks = [t for t in all_tasks if t.is_complete]
+
 if all_tasks:
     st.write("Current tasks:")
-    st.table(
-        [
-            {"pet": t.petName, "title": t.name, "time": t.time, "duration_minutes": t.duration, "priority": t.priority}
-            for t in all_tasks
-        ]
-    )
+    if incomplete_tasks:
+        st.table([_task_row(t) for t in incomplete_tasks])
+    else:
+        st.info("No pending tasks — all caught up!")
+
+    if completed_tasks:
+        with st.expander(f"Completed tasks ({len(completed_tasks)})"):
+            st.table([_task_row(t) for t in completed_tasks])
+
+    if incomplete_tasks:
+        selected_idx = st.selectbox(
+            "Mark a task complete",
+            range(len(incomplete_tasks)),
+            format_func=lambda i: f"{incomplete_tasks[i].petName} — {incomplete_tasks[i].name} ({incomplete_tasks[i].time})",
+        )
+        if st.button("Mark complete"):
+            task_to_complete = incomplete_tasks[selected_idx]
+            next_task = task_to_complete.markDone()
+            if next_task is not None:
+                pet = next(p for p in owner.pets if p.name == next_task.petName)
+                pet.addTask(next_task)
+                st.success(f"Marked done. Next occurrence scheduled for {next_task.due_date}.")
+            else:
+                st.success("Marked done.")
+            st.rerun()
 else:
     st.info("No tasks yet. Add one above.")
 

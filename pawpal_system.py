@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 
 PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}
+RECURRENCE_DELTA = {"daily": timedelta(days=1), "weekly": timedelta(weeks=1)}
 
 
 def _time_str_to_minutes(time_str: str) -> int:
@@ -23,10 +25,24 @@ class Task:
     petName: str
     time: str            # "HH:MM" scheduled start time
     is_complete: bool = False
+    recurrence: str = "none"    # "none", "daily", "weekly"
+    due_date: date = field(default_factory=date.today)
 
-    def markDone(self) -> None:
-        """Mark this task as complete."""
+    def markDone(self) -> "Task | None":
+        """Mark this task complete; if recurring, return the next occurrence as a new Task."""
         self.is_complete = True
+        delta = RECURRENCE_DELTA.get(self.recurrence)
+        if delta is None:
+            return None
+        return Task(
+            name=self.name,
+            duration=self.duration,
+            priority=self.priority,
+            petName=self.petName,
+            time=self.time,
+            recurrence=self.recurrence,
+            due_date=self.due_date + delta,
+        )
 
 
 @dataclass
