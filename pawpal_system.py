@@ -12,6 +12,7 @@ class Task:
     is_complete: bool = False
 
     def markDone(self) -> None:
+        """Mark this task as complete."""
         self.is_complete = True
 
 
@@ -22,6 +23,7 @@ class Pet:
     tasks: list[Task] = field(default_factory=list)
 
     def addTask(self, task: Task) -> None:
+        """Add a task to this pet's task list."""
         self.tasks.append(task)
 
 
@@ -31,9 +33,11 @@ class Owner:
     pets: list[Pet] = field(default_factory=list)
 
     def addPet(self, pet: Pet) -> None:
+        """Add a pet to this owner's list of pets."""
         self.pets.append(pet)
 
     def getAllTasks(self) -> list[Task]:
+        """Flatten and return the tasks of every pet this owner has."""
         all_tasks = []
         for pet in self.pets:
             all_tasks.extend(pet.tasks)
@@ -47,6 +51,7 @@ class Scheduler:
     daily_plan: list[Task] = field(default_factory=list)
 
     def buildPlan(self) -> list[Task]:
+        """Greedily fill the available time budget, taking tasks in list order."""
         time_used = 0
         self.daily_plan = []
         for task in self.tasks:
@@ -56,6 +61,7 @@ class Scheduler:
         return self.daily_plan
 
     def displayPlan(self) -> str:
+        """Render the built plan as a human-readable schedule starting at 08:00."""
         if not self.daily_plan:
             return "No plan built yet. Call buildPlan() first."
         lines = []
