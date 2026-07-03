@@ -10,15 +10,19 @@
 
 **What task did you give the agent?**
 
-<!-- Describe the goal you asked the agent to accomplish -->
+I gave the agent a task to implement weighted prioritization by combining task priority and due-date urgency
 
 **What did the agent do?**
 
-<!-- List the steps the agent took (files edited, commands run, etc.) -->
+The agent looked at the different files like CLAUDE.md, app.py and pawpal_system.py in plan mode to figure out how to implement the feature. The agent then made a score formula that used priority as the most dominant factor. To implement this it made changes in pawpal_system.py first, then applied the changes to main.py to test it out in the CLI, then added the logic to the UI in app.py
+
+The AI then updated the README.md and CLAUDE.md file to update phrases and blocks of writting that go against what was just made
 
 **What did you have to verify or fix manually?**
 
-<!-- Describe anything the agent got wrong or that required human review -->
+<!-- After reviewing the diff and running `pytest` / `python main.py` / the Streamlit app, note here anything you changed — e.g. tweaked weight constants, adjusted wording, or caught an edge case the agent missed. -->
+
+The things that I had to fix manualy were the tests and the redundancy that the code produced, but other than that it performed really well with the task I gave it 
 
 ---
 

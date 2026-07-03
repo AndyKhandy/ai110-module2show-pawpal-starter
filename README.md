@@ -25,7 +25,7 @@ Your final app should:
 ## ✨ Features
 
 - **Task, Pet, and Owner modeling** — tasks belong to a `Pet`; an `Owner` can hold multiple pets and aggregates every pet's tasks into one list via `getAllTasks()`.
-- **Priority-based schedule building** — `Scheduler.buildPlan()` orders tasks by priority (`high` → `medium` → `low`, via the `PRIORITY_ORDER` map) and greedily fills the available time budget, skipping any task that would push the plan over the limit.
+- **Weighted-priority schedule building** — `Scheduler.buildPlan()` ranks tasks with `compute_priority_score()`, a weighted score combining priority tier (`PRIORITY_ORDER` × `PRIORITY_WEIGHT`) and due-date urgency (`URGENCY_WEIGHT`, capped at `URGENCY_CAP_DAYS`), then greedily fills the available time budget in that order, skipping any task that would push the plan over the limit.
 - **Chronological sorting** — `Scheduler.sort_by_time()` reorders tasks by their `"HH:MM"` start time; exposed in the UI as a "Sort by start time" toggle.
 - **Pet and status filtering** — `Scheduler.filter_tasks(pet_name, is_complete)` narrows the task list by pet name and/or completion status (either filter can be applied independently); the UI exposes both as dropdown controls.
 - **Overlap/conflict detection** — `Scheduler.detect_conflicts()` sorts tasks by `(due_date, time)` and flags any two tasks — same pet or different pets — whose time windows overlap on the same day, returning human-readable warning strings; the UI renders each as an `st.warning`, or an `st.success` confirmation when the day is conflict-free.
@@ -84,11 +84,11 @@ Sample test output:
 rootdir: C:\Users\andyt\Desktop\VSCODE\AI110\projects\ai110-module2show-pawpal-starter
 configfile: pytest.ini
 plugins: anyio-4.14.1
-collected 33 items                                                                                                                                                               
+collected 36 items                                                                                                                                                               
 
-tests\test_pawpal.py .................................                                                                                                                     [100%]
+tests\test_pawpal.py ....................................                                                                                                                  [100%]
 
-============================================================================== 33 passed in 0.11s ===============================================================================
+============================================================================== 36 passed in 0.50s ===============================================================================
 ```
 
 Confidence Level: 5 stars
@@ -101,6 +101,7 @@ Confidence Level: 5 stars
 | Pet/status filtering | `Scheduler.filter_tasks(pet_name, is_complete)` | Returns tasks matching an optional pet name and/or completion status; either filter can be omitted. |
 | Conflict detection | `Scheduler.detect_conflicts()` | Sorts tasks by `(due_date, time)` and flags any two tasks — same pet or different pets — whose time windows overlap on the same day. Returns a list of warning strings (empty if none). |
 | Recurring tasks | `Task.markDone()` | Marks a task complete, and if its `recurrence` is `"daily"` or `"weekly"`, automatically returns a new `Task` for the next occurrence with `due_date` advanced via `timedelta`. |
+| Weighted prioritization | `Scheduler.compute_priority_score(task, today)` / `buildPlan()` | Scores each task by priority tier plus due-date urgency instead of raw list order, then greedily fills the time budget highest-score-first — surfaced in the UI as a `score` column so the plan explains itself. |
 
 ## 📸 Demo Walkthrough
 
@@ -119,13 +120,16 @@ The main UI features and actions a user can perform is adding pets, adding tasks
 -----Today's Schedule-----
 Tasks for Cassie
   14:30 to 15:20 — Walk [priority: high]
-  08:00 to 08:25 — Bath [priority: low]
+Tasks for Bob
+  16:00 to 16:30 — Vet Checkup [priority: high]
+Tasks for Cassie
   12:00 to 12:10 — Feed [priority: medium]
-  14:40 to 14:55 — Nail Trim [priority: low]
 Tasks for Bob
   09:15 to 09:55 — Cut Hair [priority: medium]
-  16:00 to 16:30 — Vet Checkup [priority: high]
   14:35 to 14:55 — Ear Cleaning [priority: medium]
+Tasks for Cassie
+  08:00 to 08:25 — Bath [priority: low]
+  14:40 to 14:55 — Nail Trim [priority: low]
 
 -----Tasks Sorted by Time-----
   08:00 - Bath (Cassie)
@@ -148,6 +152,22 @@ Tasks for Bob
   Feed - 12:00 [pending]
   Walk - 14:30 [pending]
   Nail Trim - 14:40 [pending]
+
+-----Schedule Conflicts-----
+  Conflict: 'Walk' (Cassie, 14:30-15:20) overlaps with 'Ear Cleaning' (Bob, 14:35)
+  Conflict: 'Walk' (Cassie, 14:30-15:20) overlaps with 'Nail Trim' (Cassie, 14:40)
+  Conflict: 'Ear Cleaning' (Bob, 14:35-14:55) overlaps with 'Nail Trim' (Cassie, 14:40)
+
+-----Weighted Priority Scores-----
+  Walk (Cassie) [priority: high, due: 2026-07-02] -> score 44
+  Vet Checkup (Bob) [priority: high, due: 2026-07-02] -> score 44
+  Cut Hair (Bob) [priority: medium, due: 2026-07-02] -> score 34
+  Feed (Cassie) [priority: medium, due: 2026-07-02] -> score 34
+  Ear Cleaning (Bob) [priority: medium, due: 2026-07-02] -> score 34
+  Bath (Cassie) [priority: low, due: 2026-07-02] -> score 24
+  Nail Trim (Cassie) [priority: low, due: 2026-07-02] -> score 24
 ```
+
+Note: `buildPlan()` now ranks tasks by weighted priority score before filling the time budget, so `displayPlan()`'s output is grouped by score tier (high → medium → low) rather than the original insertion order — the `due` dates above will shift to match whatever day you actually run this on, since `Task.due_date` defaults to `date.today()`.
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

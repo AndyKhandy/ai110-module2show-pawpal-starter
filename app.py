@@ -207,6 +207,10 @@ if st.button("Generate schedule"):
                 f"Schedule built — {len(plan)} task(s) scheduled, "
                 f"{minutes_used} of {int(available_minutes)} minutes used."
             )
+            st.caption(
+                "Tasks are ranked by a weighted score (priority tier + due-date urgency) "
+                "before the time budget is filled — higher score means it was chosen first."
+            )
             st.table(
                 [
                     {
@@ -215,6 +219,7 @@ if st.button("Generate schedule"):
                         "start": t.time,
                         "end": _end_time(t),
                         "priority": PRIORITY_BADGES.get(t.priority, t.priority),
+                        "score": scheduler.compute_priority_score(t),
                     }
                     for t in plan
                 ]

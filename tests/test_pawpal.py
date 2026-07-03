@@ -365,3 +365,34 @@ def test_build_plan_includes_task_that_exactly_fills_remaining_budget():
     plan = scheduler.buildPlan()
 
     assert [t.name for t in plan] == ["ExactFit"]
+
+
+# --- Weighted prioritization edge cases --------------------------------------
+
+def test_compute_priority_score_ranks_high_above_low_priority_with_equal_urgency():
+    today = date(2026, 7, 1)
+    high = make_task(name="High", priority="high", due_date=today)
+    low = make_task(name="Low", priority="low", due_date=today)
+    scheduler = Scheduler(tasks=[high, low], available_minutes=120)
+
+    assert scheduler.compute_priority_score(high, today) > scheduler.compute_priority_score(low, today)
+
+
+def test_compute_priority_score_ranks_more_urgent_above_less_urgent_with_equal_priority():
+    today = date(2026, 7, 1)
+    urgent = make_task(name="Urgent", priority="medium", due_date=today)
+    distant = make_task(name="Distant", priority="medium", due_date=today + timedelta(days=30))
+    scheduler = Scheduler(tasks=[urgent, distant], available_minutes=120)
+
+    assert scheduler.compute_priority_score(urgent, today) > scheduler.compute_priority_score(distant, today)
+
+
+def test_build_plan_schedules_higher_scored_task_when_only_one_fits():
+    today = date(2026, 7, 1)
+    low = make_task(name="Low", priority="low", duration=50, due_date=today)
+    high = make_task(name="High", priority="high", duration=50, due_date=today)
+    scheduler = Scheduler(tasks=[low, high], available_minutes=50)
+
+    plan = scheduler.buildPlan(today=today)
+
+    assert [t.name for t in plan] == ["High"]

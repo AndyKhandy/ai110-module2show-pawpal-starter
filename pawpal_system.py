@@ -4,6 +4,14 @@ from datetime import date, timedelta
 PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}
 RECURRENCE_DELTA = {"daily": timedelta(days=1), "weekly": timedelta(weeks=1)}
 
+# Weighted prioritization: buildPlan() ranks tasks by priority tier plus due-date
+# urgency instead of raw list order. Priority dominates (20-pt spread across 3
+# tiers) but urgency (max 14-pt swing) can still bump a due-today medium task
+# above a high-priority task that's weeks away.
+PRIORITY_WEIGHT = 10
+URGENCY_WEIGHT = 2
+URGENCY_CAP_DAYS = 7
+
 
 def _time_str_to_minutes(time_str: str) -> int:
     """Parse an "HH:MM" (or "H:MM") string into minutes since midnight."""
@@ -79,11 +87,19 @@ class Scheduler:
     available_minutes: int                  # total time budget for the day
     daily_plan: list[Task] = field(default_factory=list)
 
-    def buildPlan(self) -> list[Task]:
-        """Greedily fill the available time budget, taking tasks in list order."""
+    def compute_priority_score(self, task: Task, today: date = None) -> int:
+        """Score a task by priority tier plus how soon it's due (higher = more important)."""
+        today = today or date.today()
+        days_until_due = (task.due_date - today).days
+        urgency = max(0, URGENCY_CAP_DAYS - max(days_until_due, 0))
+        return PRIORITY_ORDER.get(task.priority, 0) * PRIORITY_WEIGHT + urgency * URGENCY_WEIGHT
+
+    def buildPlan(self, today: date = None) -> list[Task]:
+        """Greedily fill the available time budget, ranking tasks by weighted priority score first."""
         time_used = 0
         self.daily_plan = []
-        for task in self.tasks:
+        ranked_tasks = sorted(self.tasks, key=lambda t: self.compute_priority_score(t, today), reverse=True)
+        for task in ranked_tasks:
             if time_used + task.duration <= self.available_minutes:
                 self.daily_plan.append(task)
                 time_used += task.duration

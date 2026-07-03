@@ -30,6 +30,7 @@ classDiagram
         +list tasks
         +int available_minutes
         +list daily_plan
+        +compute_priority_score(task: Task, today: date) int
         +buildPlan() list
         +sort_by_time() list
         +filter_tasks(pet_name: str, is_complete: bool) list

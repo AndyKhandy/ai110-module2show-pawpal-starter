@@ -38,7 +38,8 @@ All logic lives in `pawpal_system.py`. Four dataclasses, defined in this order (
 - **`Pet`** — `name`, `species`, `tasks: list[Task]`; `addTask()` appends to its own task list
 - **`Owner`** — `name`, `pets: list[Pet]`; `addPet()` adds a pet, `getAllTasks()` flattens all pets' tasks into one list
 - **`Scheduler`** — requires `tasks: list[Task]` and `available_minutes: int`:
-  - `buildPlan()` sorts by `PRIORITY_ORDER` and greedily fills the time budget
+  - `compute_priority_score(task, today=None)` scores a task using `PRIORITY_ORDER` × `PRIORITY_WEIGHT` plus a due-date urgency term (`URGENCY_WEIGHT`, capped at `URGENCY_CAP_DAYS`) — priority dominates but urgency can bump a due-today task above a less urgent higher-priority one
+  - `buildPlan(today=None)` ranks tasks by `compute_priority_score()` (descending) and greedily fills the time budget
   - `sort_by_time()` sorts `self.tasks` in place by `"HH:MM"` start time
   - `filter_tasks(pet_name=None, is_complete=None)` returns tasks matching either/both optional filters
   - `detect_conflicts()` sorts tasks by `(due_date, time)` and returns a list of warning strings for any two tasks (same pet or different pets) whose time windows overlap on the same day
@@ -52,9 +53,9 @@ scheduler.buildPlan()
 print(scheduler.displayPlan())
 ```
 
-`PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}` is a module-level constant used by `buildPlan()` for sorting.
+`PRIORITY_ORDER = {"low": 1, "medium": 2, "high": 3}` is a module-level constant used by `compute_priority_score()` for weighting; `PRIORITY_WEIGHT`, `URGENCY_WEIGHT`, and `URGENCY_CAP_DAYS` tune how strongly priority vs. due-date urgency affect that score.
 
-**Completed features:** sorting by time, filtering by pet/status, recurring tasks (daily/weekly), and conflict detection are all implemented — see `sort_by_time()`, `filter_tasks()`, `Task.markDone()`, and `detect_conflicts()` above.
+**Completed features:** sorting by time, filtering by pet/status, recurring tasks (daily/weekly), conflict detection, and weighted prioritization are all implemented — see `sort_by_time()`, `filter_tasks()`, `Task.markDone()`, `detect_conflicts()`, and `compute_priority_score()` above.
 
 ## Key Files
 

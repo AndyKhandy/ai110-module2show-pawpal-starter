@@ -54,3 +54,9 @@ if conflicts:
         print(f"  {warning}")
 else:
     print("  No conflicts found.")
+
+print("\n-----Weighted Priority Scores-----")
+scored_tasks = sorted(planner.tasks, key=planner.compute_priority_score, reverse=True)
+for task in scored_tasks:
+    score = planner.compute_priority_score(task)
+    print(f"  {task.name} ({task.petName}) [priority: {task.priority}, due: {task.due_date}] -> score {score}")
