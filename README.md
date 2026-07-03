@@ -58,7 +58,7 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
 # Run with coverage:
 pytest --cov
@@ -68,7 +68,17 @@ Sample test output:
 
 ```
 # Paste your pytest output here
+rootdir: C:\Users\andyt\Desktop\VSCODE\AI110\projects\ai110-module2show-pawpal-starter
+configfile: pytest.ini
+plugins: anyio-4.14.1
+collected 33 items                                                                                                                                                               
+
+tests\test_pawpal.py .................................                                                                                                                     [100%]
+
+============================================================================== 33 passed in 0.11s ===============================================================================
 ```
+
+Confidence Level: 5 stars
 
 ## 📐 Smarter Scheduling
 
