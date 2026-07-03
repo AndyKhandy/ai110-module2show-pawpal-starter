@@ -67,10 +67,18 @@ This brings about a big issue of where you might have two high priority tasks ne
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+I mainly used Claude Code on it's plan mode to get a better idea of how to structure the project (fields and functions for the individual classes). I also used AI to create pytests for me to help verify that my algorithims were performing correctly.
+
+The prompts I used were "find edge cases that may break the functions", "ask me questions until you are 90% confident on your task", and "this function may perform well but is it readible?"
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+When AI made some UI changes to the Streamlit app.py I did not accept it as is because the design looked wonky and some of the features didn't work as I/the rubric wanted. I looked at the streamlit app and offered my suggestions and eventually I reached an output I liked
+
+I verified what the AI suggested by seeing how it came out with the response. Usually AI will have a summary section near the end detailing what it did and why, and if it contradicts with what I want I add onto the conversation and not clear my context
 
 ---
 
@@ -81,10 +89,18 @@ This brings about a big issue of where you might have two high priority tasks ne
 - What behaviors did you test?
 - Why were these tests important?
 
+some of the behaviors I tested were edge cases like if a string input was empty, if a list was empty, and if certain functions worked the way I wanted (add task and complete task)
+
+These tests were important because it gave me confidence that the functions would perform in every scenario, even ones I didn't think about at the start or at all.
+
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
+
+I am really confident that my scheduler works correctly. The tests that AI produced seem to cover a large amount of cases and the streamlit worked fine when I used it (I didn't do manually user interactions for all features though)
+
+I think most edge cases were hit by Claude Code but if I were to probe around a bit more I'm sure there could be a case that is wrong that I could try to defactor
 
 ---
 
@@ -94,10 +110,16 @@ This brings about a big issue of where you might have two high priority tasks ne
 
 - What part of this project are you most satisfied with?
 
+I am most satisifed with the pawpal_system.py file part of the project. It is the backbone of everything that runs in app.py and the logic reminds me of a project I made before using Java.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+If I had another iteration, I would definitely spend more time on plan mode. I often find myself going straight to implemention whenever we got to a new section when I should be focused more on whether or not my inputs and thoughts are correct.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+Context and what you input is VERY crucial to getting what you want. Using @ to reference your files seems to get Claude Code straight to where I need it to and the concise and not too short inputs gives it all it needs to implement what I have in mind. I believe that most people don't give enough to AI which is why the outputs may seem less powerful and impactful
