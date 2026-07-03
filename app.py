@@ -56,6 +56,7 @@ with col2:
 
 if st.button("Add pet"):
     owner.addPet(Pet(name=pet_name, species=species))
+    st.success(f"Added {pet_name} the {species} 🐾")
 
 if owner.pets:
     st.write("Current pets:")
@@ -92,8 +93,19 @@ if owner.pets:
                 recurrence=recurrence,
             )
         )
+        st.success(f"Added task '{task_title}' for {task_pet_name} at {task_time}")
 else:
     st.info("Add a pet before adding tasks.")
+
+PRIORITY_BADGES = {"high": "🔴 High", "medium": "🟡 Medium", "low": "🟢 Low"}
+
+
+def _end_time(t):
+    h, m = (int(p) for p in t.time.split(":"))
+    total = h * 60 + m + t.duration
+    eh, em = divmod(total, 60)
+    return f"{eh:02d}:{em:02d}"
+
 
 def _task_row(t):
     return {
@@ -101,7 +113,7 @@ def _task_row(t):
         "title": t.name,
         "time": t.time,
         "duration_minutes": t.duration,
-        "priority": t.priority,
+        "priority": PRIORITY_BADGES.get(t.priority, t.priority),
         "recurrence": t.recurrence,
         "due_date": t.due_date,
     }
@@ -113,14 +125,48 @@ completed_tasks = [t for t in all_tasks if t.is_complete]
 
 if all_tasks:
     st.write("Current tasks:")
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    metric_col1.metric("Total tasks", len(all_tasks))
+    metric_col2.metric("Pending", len(incomplete_tasks))
+    metric_col3.metric("Completed", len(completed_tasks))
+
     if incomplete_tasks:
         st.table([_task_row(t) for t in incomplete_tasks])
     else:
-        st.info("No pending tasks — all caught up!")
+        st.success("No pending tasks — all caught up!")
 
     if completed_tasks:
         with st.expander(f"Completed tasks ({len(completed_tasks)})"):
             st.table([_task_row(t) for t in completed_tasks])
+
+    st.markdown("### Filter & Sort Tasks")
+    filt_col1, filt_col2, filt_col3 = st.columns(3)
+    with filt_col1:
+        filter_pet = st.selectbox("Filter by pet", ["All"] + [p.name for p in owner.pets])
+    with filt_col2:
+        filter_status = st.selectbox("Filter by status", ["All", "Pending", "Completed"])
+    with filt_col3:
+        sort_chrono = st.checkbox("Sort by start time", value=True)
+
+    view_scheduler = Scheduler(tasks=list(all_tasks), available_minutes=0)
+    if sort_chrono:
+        view_scheduler.sort_by_time()
+
+    pet_arg = None if filter_pet == "All" else filter_pet
+    status_arg = None if filter_status == "All" else (filter_status == "Completed")
+    filtered_tasks = view_scheduler.filter_tasks(pet_name=pet_arg, is_complete=status_arg)
+
+    if filtered_tasks:
+        st.table([_task_row(t) for t in filtered_tasks])
+    else:
+        st.warning("No tasks match the selected filters.")
+
+    conflicts = view_scheduler.detect_conflicts()
+    if conflicts:
+        for warning_msg in conflicts:
+            st.warning(warning_msg)
+    else:
+        st.success("No scheduling conflicts detected.")
 
     if incomplete_tasks:
         selected_idx = st.selectbox(
@@ -151,5 +197,30 @@ if st.button("Generate schedule"):
         st.warning("Add at least one task before generating a schedule.")
     else:
         scheduler = Scheduler(tasks=all_tasks, available_minutes=int(available_minutes))
-        scheduler.buildPlan()
-        st.text(scheduler.displayPlan())
+        plan = scheduler.buildPlan()
+
+        if not plan:
+            st.warning("No tasks fit in the available time.")
+        else:
+            minutes_used = sum(t.duration for t in plan)
+            st.success(
+                f"Schedule built — {len(plan)} task(s) scheduled, "
+                f"{minutes_used} of {int(available_minutes)} minutes used."
+            )
+            st.table(
+                [
+                    {
+                        "pet": t.petName,
+                        "task": t.name,
+                        "start": t.time,
+                        "end": _end_time(t),
+                        "priority": PRIORITY_BADGES.get(t.priority, t.priority),
+                    }
+                    for t in plan
+                ]
+            )
+
+            skipped = [t for t in all_tasks if t not in plan]
+            if skipped:
+                with st.expander(f"Not scheduled ({len(skipped)}) — ran out of time"):
+                    st.table([_task_row(t) for t in skipped])

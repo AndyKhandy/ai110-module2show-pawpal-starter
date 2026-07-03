@@ -22,6 +22,19 @@ Your final app should:
 - Display the plan clearly (and ideally explain the reasoning)
 - Include tests for the most important scheduling behaviors
 
+## ✨ Features
+
+- **Task, Pet, and Owner modeling** — tasks belong to a `Pet`; an `Owner` can hold multiple pets and aggregates every pet's tasks into one list via `getAllTasks()`.
+- **Priority-based schedule building** — `Scheduler.buildPlan()` orders tasks by priority (`high` → `medium` → `low`, via the `PRIORITY_ORDER` map) and greedily fills the available time budget, skipping any task that would push the plan over the limit.
+- **Chronological sorting** — `Scheduler.sort_by_time()` reorders tasks by their `"HH:MM"` start time; exposed in the UI as a "Sort by start time" toggle.
+- **Pet and status filtering** — `Scheduler.filter_tasks(pet_name, is_complete)` narrows the task list by pet name and/or completion status (either filter can be applied independently); the UI exposes both as dropdown controls.
+- **Overlap/conflict detection** — `Scheduler.detect_conflicts()` sorts tasks by `(due_date, time)` and flags any two tasks — same pet or different pets — whose time windows overlap on the same day, returning human-readable warning strings; the UI renders each as an `st.warning`, or an `st.success` confirmation when the day is conflict-free.
+- **Recurring tasks** — `Task.markDone()` marks a task complete and, when its `recurrence` is `"daily"` or `"weekly"`, automatically returns a new `Task` for the next occurrence with `due_date` advanced via `timedelta`.
+- **Interactive Streamlit UI** (`app.py`) — add pets/tasks with instant `st.success` confirmations, mark tasks complete (auto-scheduling the next recurrence), filter/sort/view tasks with live `st.metric` summaries (total/pending/completed) and color-coded priority badges, and generate a time-boxed daily schedule as a table with any unscheduled tasks listed separately.
+
+## Mermaid.js Structure
+![Picture of the Mermaid.js structure diagram](task_scheduler_system.png)
+
 ## Getting started
 
 ### Setup
@@ -93,10 +106,48 @@ Confidence Level: 5 stars
 
 Describe your app in numbered steps so a reader can follow along without watching a video:
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+The main UI features and actions a user can perform is adding pets, adding tasks for different pets, building a schedule, filtering tasks, completing tasks, and viewing already completed tasks
+
+1. Add a pet (describe their name and species)
+2. Give that pet a task (task name, duration ,priority, etc) or create another pet. It will show conflict warnings if times conflict
+3. Build the schedule with the amounts of available minutes 
+4. Mark a task as complete (may create another one depending on if it's reoccuring)
+5. Sort the tasks by which ever way you want or continue creating more tasks + pets!
+
+### Input from main.py showing CLI output
+```text
+-----Today's Schedule-----
+Tasks for Cassie
+  14:30 to 15:20 — Walk [priority: high]
+  08:00 to 08:25 — Bath [priority: low]
+  12:00 to 12:10 — Feed [priority: medium]
+  14:40 to 14:55 — Nail Trim [priority: low]
+Tasks for Bob
+  09:15 to 09:55 — Cut Hair [priority: medium]
+  16:00 to 16:30 — Vet Checkup [priority: high]
+  14:35 to 14:55 — Ear Cleaning [priority: medium]
+
+-----Tasks Sorted by Time-----
+  08:00 - Bath (Cassie)
+  09:15 - Cut Hair (Bob)
+  12:00 - Feed (Cassie)
+  14:30 - Walk (Cassie)
+  14:35 - Ear Cleaning (Bob)
+  14:40 - Nail Trim (Cassie)
+  16:00 - Vet Checkup (Bob)
+
+-----Incomplete Tasks-----
+  Feed (Cassie) - 12:00
+  Walk (Cassie) - 14:30
+  Ear Cleaning (Bob) - 14:35
+  Nail Trim (Cassie) - 14:40
+  Vet Checkup (Bob) - 16:00
+
+-----Cassie's Tasks-----
+  Bath - 08:00 [done]
+  Feed - 12:00 [pending]
+  Walk - 14:30 [pending]
+  Nail Trim - 14:40 [pending]
+```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
